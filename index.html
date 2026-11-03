@@ -1,0 +1,394 @@
+AVTECH SMS SENDER — COMPLETE INDEX.HTML
+
+Save this as "index.html".
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVTECH SMS Sender</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f1f5f9;
+ color:#172033;
+}
+header{
+ background:#102b50;
+ color:white;
+ padding:20px;
+ text-align:center;
+}
+header h2{margin:0}
+header p{margin:7px 0 0;color:#cbd5e1}
+.container{
+ max-width:850px;
+ margin:25px auto;
+ padding:15px;
+}
+.card{
+ background:white;
+ border-radius:13px;
+ padding:22px;
+ margin-bottom:18px;
+ box-shadow:0 3px 15px #0000000d;
+}
+label{
+ display:block;
+ font-weight:bold;
+ margin:15px 0 7px;
+}
+input,textarea,select{
+ width:100%;
+ padding:13px;
+ border:1px solid #cbd5e1;
+ border-radius:8px;
+ font-size:15px;
+ outline:none;
+}
+input:focus,textarea:focus{
+ border-color:#1674d1;
+}
+textarea{
+ min-height:130px;
+ resize:vertical;
+}
+button{
+ border:0;
+ border-radius:8px;
+ padding:13px 18px;
+ cursor:pointer;
+ font-weight:bold;
+ font-size:15px;
+}
+.primary{
+ background:#1266c5;
+ color:white;
+ width:100%;
+ margin-top:18px;
+}
+.primary:disabled{opacity:.6}
+.secondary{
+ background:#e2e8f0;
+ color:#172033;
+ margin-top:10px;
+}
+.stats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:10px;
+}
+.stat{
+ background:#eff6ff;
+ padding:15px;
+ border-radius:9px;
+ text-align:center;
+}
+.stat strong{
+ display:block;
+ font-size:23px;
+ color:#1266c5;
+ margin-bottom:5px;
+}
+.status{
+ padding:13px;
+ margin-top:15px;
+ border-radius:8px;
+ display:none;
+}
+.success{background:#dcfce7;color:#166534}
+.error{background:#fee2e2;color:#991b1b}
+.info{background:#dbeafe;color:#1e40af}
+.small{font-size:12px;color:#64748b}
+.history-item{
+ padding:12px 0;
+ border-bottom:1px solid #e2e8f0;
+ font-size:14px;
+}
+footer{text-align:center;padding:20px;color:#64748b}
+@media(max-width:550px){
+ .stats{grid-template-columns:1fr}
+ .container{padding:10px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <h2>AVTECH SMS SENDER</h2>
+ <p>Professional SMS Management System</p>
+</header>
+
+<div class="container">
+
+ <div class="card">
+  <h3>SMS Dashboard</h3>
+  <div class="stats">
+   <div class="stat">
+    <strong id="sentCount">0</strong>
+    SMS Requests
+   </div>
+   <div class="stat">
+    <strong id="numberCount">0</strong>
+    Recipients
+   </div>
+   <div class="stat">
+    <strong id="historyCount">0</strong>
+    History
+   </div>
+  </div>
+ </div>
+
+ <div class="card">
+  <h3>Compose SMS</h3>
+
+  <label>Sending Mode</label>
+  <select id="mode" onchange="changeMode()">
+   <option value="single">Single SMS</option>
+   <option value="bulk">Bulk SMS</option>
+  </select>
+
+  <div id="singleBox">
+   <label>Recipient Phone Number</label>
+   <input id="phone" placeholder="0712345678 or +254712345678">
+   <p class="small">Enter a Kenyan mobile number.</p>
+  </div>
+
+  <div id="bulkBox" style="display:none">
+   <label>Multiple Phone Numbers</label>
+   <textarea id="phones" placeholder="0712345678&#10;0723456789&#10;+254712345678"></textarea>
+   <p class="small">Enter one phone number per line or separate numbers using commas.</p>
+  </div>
+
+  <label>SMS Message</label>
+  <textarea id="message" maxlength="1000"
+   placeholder="Type your SMS message here..."
+   oninput="countCharacters()"></textarea>
+
+  <div class="small">
+   Characters: <span id="charCount">0</span> / 1000
+  </div>
+
+  <button class="primary" id="sendBtn" onclick="sendSMS()">
+   SEND SMS
+  </button>
+
+  <div id="status" class="status"></div>
+ </div>
+
+ <div class="card">
+  <h3>SMS History</h3>
+  <div id="history">
+   <p class="small">No SMS requests yet.</p>
+  </div>
+  <button class="secondary" onclick="clearHistory()">Clear History</button>
+ </div>
+
+ <div class="card">
+  <h3>System Information</h3>
+  <p><b>Provider:</b> Africa's Talking</p>
+  <p><b>API Mode:</b> LIVE (configured on backend)</p>
+  <p><b>Sender:</b> Default account sender</p>
+  <p class="small">SMS charges are determined by your Africa's Talking account.</p>
+ </div>
+
+</div>
+
+<footer>
+ © 2026 AVTECH SMS MANAGEMENT SYSTEM
+</footer>
+
+<script>
+const API_URL = "/api/send-sms";
+
+let sentCount = 0;
+let recipientCount = 0;
+let historyData = [];
+
+function changeMode(){
+ const mode=document.getElementById("mode").value;
+ document.getElementById("singleBox").style.display=
+  mode==="single"?"block":"none";
+ document.getElementById("bulkBox").style.display=
+  mode==="bulk"?"block":"none";
+}
+
+function countCharacters(){
+ document.getElementById("charCount").textContent=
+  document.getElementById("message").value.length;
+}
+
+function normalizePhone(number){
+ let p=number.trim().replace(/[\s-]/g,"");
+
+ if(/^0[17]\d{8}$/.test(p)){
+  p="+254"+p.substring(1);
+ }
+
+ if(/^254[17]\d{8}$/.test(p)){
+  p="+"+p;
+ }
+
+ if(!/^\+254[17]\d{8}$/.test(p)){
+  throw new Error("Invalid Kenyan phone number: "+number);
+ }
+
+ return p;
+}
+
+function showStatus(message,type){
+ const box=document.getElementById("status");
+ box.className="status "+type;
+ box.textContent=message;
+ box.style.display="block";
+}
+
+function getRecipients(){
+ const mode=document.getElementById("mode").value;
+ let numbers=[];
+
+ if(mode==="single"){
+  numbers=[document.getElementById("phone").value];
+ }else{
+  numbers=document.getElementById("phones").value
+   .split(/[\n,;]+/)
+   .map(x=>x.trim())
+   .filter(Boolean);
+ }
+
+ if(!numbers.length){
+  throw new Error("Enter at least one phone number.");
+ }
+
+ return [...new Set(numbers.map(normalizePhone))];
+}
+
+async function sendSMS(){
+ const btn=document.getElementById("sendBtn");
+ const message=document.getElementById("message").value.trim();
+
+ try{
+  if(!message) throw new Error("Please enter your SMS message.");
+  if(message.length>1000) throw new Error("Message is too long.");
+
+  const recipients=getRecipients();
+
+  if(recipients.length>100){
+   throw new Error("Maximum 100 recipients per request.");
+  }
+
+  if(!confirm("Send this SMS to "+recipients.length+" recipient(s)?")){
+   return;
+  }
+
+  btn.disabled=true;
+  btn.textContent="SENDING...";
+
+  let successful=0;
+  let failed=0;
+
+  for(const phone of recipients){
+   try{
+    const response=await fetch(API_URL,{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify({phone,message})
+    });
+
+    const result=await response.json();
+
+    if(!response.ok || result.success!==true){
+     throw new Error(result.error||"Sending failed");
+    }
+
+    successful++;
+    sentCount++;
+    recipientCount++;
+
+    addHistory(phone,message,"Accepted");
+
+   }catch(error){
+    failed++;
+    addHistory(phone,message,"Failed: "+error.message);
+   }
+
+   updateStats();
+  }
+
+  if(successful>0){
+   showStatus(
+    "SMS requests accepted: "+successful+
+    ". Failed: "+failed+
+    ". Check your Africa's Talking account for delivery reports.",
+    failed?"info":"success"
+   );
+  }else{
+   showStatus("No SMS requests were accepted. Check your backend and API settings.","error");
+  }
+
+ }catch(error){
+  showStatus(error.message,"error");
+ }finally{
+  btn.disabled=false;
+  btn.textContent="SEND SMS";
+ }
+}
+
+function addHistory(phone,message,status){
+ historyData.unshift({
+  phone,
+  message,
+  status,
+  date:new Date().toLocaleString()
+ });
+
+ renderHistory();
+}
+
+function renderHistory(){
+ const box=document.getElementById("history");
+
+ if(!historyData.length){
+  box.innerHTML="<p class='small'>No SMS requests yet.</p>";
+  return;
+ }
+
+ box.innerHTML=historyData.map(item=>`
+  <div class="history-item">
+   <b>${escapeHTML(item.phone)}</b><br>
+   ${escapeHTML(item.message)}<br>
+   <span class="small">${escapeHTML(item.date)} — ${escapeHTML(item.status)}</span>
+  </div>
+ `).join("");
+
+ document.getElementById("historyCount").textContent=historyData.length;
+}
+
+function escapeHTML(value){
+ return String(value).replace(/[&<>"']/g,char=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  '"':"&quot;","'":"&#39;"
+ })[char]);
+}
+
+function updateStats(){
+ document.getElementById("sentCount").textContent=sentCount;
+ document.getElementById("numberCount").textContent=recipientCount;
+}
+
+function clearHistory(){
+ if(!confirm("Clear SMS history?")) return;
+ historyData=[];
+ renderHistory();
+ document.getElementById("historyCount").textContent="0";
+}
+
+</script>
+
+</body>
+</html>
