@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#102b50">
+<title>AVTECH SMS Management</title>
+<style>
+:root{--navy:#102b50;--blue:#1769d2;--bg:#f3f6fb;--ink:#17243a;--muted:#718096;--line:#e4eaf2;--green:#168653;--red:#c0392b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border:0;border-radius:9px;padding:12px 16px;font-weight:700}
+.hidden{display:none!important}
+.login-screen{min-height:100vh;display:grid;place-items:center;padding:20px;background:linear-gradient(135deg,#0c2342,#1769d2)}
+.login-card{width:min(420px,100%);background:#fff;border-radius:18px;padding:30px;box-shadow:0 20px 60px #07172d55}
+.brand-mark{width:52px;height:52px;border-radius:14px;background:#eaf2ff;color:var(--blue);display:grid;place-items:center;font-weight:900;font-size:20px;margin-bottom:18px}
+.login-card h1{margin:0 0 7px;font-size:25px}.muted{color:var(--muted);font-size:13px;line-height:1.5}
+label{display:block;font-weight:700;font-size:13px;margin:17px 0 7px}
+input,textarea,select{width:100%;padding:13px;border:1px solid #d6deea;border-radius:9px;background:#fff;color:var(--ink);outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px #1769d21a}
+.primary{background:var(--blue);color:white}.primary:hover{background:#0e56b4}.primary:disabled{opacity:.6;cursor:wait}
+.secondary{background:#edf2f8;color:var(--ink)}.danger{background:#fff0ef;color:var(--red)}
+.full{width:100%;margin-top:20px}
+.login-error{color:var(--red);font-size:13px;margin-top:12px;min-height:18px}
+.app{min-height:100vh}
+.topbar{height:72px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 25px;gap:15px}
+.brand{display:flex;align-items:center;gap:12px}.brand .brand-mark{margin:0;width:40px;height:40px;background:#ffffff1b;color:#fff;border:1px solid #ffffff30}
+.brand strong{display:block;font-size:16px;letter-spacing:.4px}.brand small{color:#c5d4e8;font-size:11px}
+.top-actions{display:flex;align-items:center;gap:12px}.admin-label{font-size:12px;color:#d5e2f3}
+.logout{background:#ffffff18;color:#fff;border:1px solid #ffffff35;padding:9px 13px}
+.layout{max-width:1180px;margin:25px auto;padding:0 18px;display:grid;grid-template-columns:220px 1fr;gap:22px}
+.sidebar,.panel,.stat-card{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 16px #13294b08}
+.sidebar{padding:13px;height:max-content;position:sticky;top:18px}
+.nav-btn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:transparent;color:#53647b;padding:13px;margin:3px 0}
+.nav-btn.active{background:#edf4ff;color:#145fc0}
+.nav-btn span{font-size:17px;width:20px;text-align:center}
+.main{min-width:0}.page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin:2px 0 20px}
+.page-head h1{margin:0 0 6px;font-size:25px}.page-head p{margin:0;color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.stat-card{padding:18px}.stat-top{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.stat-card strong{display:block;font-size:27px;margin-top:12px;color:var(--navy)}
+.stat-icon{width:34px;height:34px;border-radius:10px;background:#edf4ff;color:var(--blue);display:grid;place-items:center;font-size:17px}
+.panel{padding:21px;margin-bottom:18px}.panel h2{font-size:17px;margin:0 0 5px}.panel-sub{font-size:12px;color:var(--muted);margin:0 0 15px}
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+textarea{min-height:120px;resize:vertical}
+.small{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}
+.actions button{min-width:130px}
+.status{display:none;padding:12px 14px;border-radius:9px;margin-top:14px;font-size:13px;line-height:1.45}
+.status.success{display:block;background:#e8f7ef;color:#17643e}.status.error{display:block;background:#fff0ef;color:#a52c22}.status.info{display:block;background:#eaf2ff;color:#194f98}
+.history-row{padding:14px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:10px}
+.history-row:last-child{border-bottom:0}.history-row strong{font-size:13px}.history-row p{font-size:13px;margin:5px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.pill{display:inline-block;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:700;background:#e8f7ef;color:#17643e;height:max-content}
+.pill.failed{background:#fff0ef;color:#a52c22}
+.empty{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+.info-list{display:grid;grid-template-columns:170px 1fr;gap:13px;font-size:13px}.info-list b{color:#52647b}
+footer{text-align:center;color:#8a96a8;font-size:11px;padding:18px}
+@media(max-width:760px){.layout{grid-template-columns:1fr;margin:15px auto}.sidebar{position:static;display:flex;overflow:auto;padding:7px}.nav-btn{white-space:nowrap;width:auto;margin:0;padding:10px}.nav-btn span{display:none}.stats{gap:8px}.stat-card{padding:13px}.stat-card strong{font-size:22px}.topbar{padding:0 14px}.admin-label{display:none}}
+@media(max-width:520px){.stats{grid-template-columns:1fr 1fr}.stats .stat-card:last-child{grid-column:span 2}.grid-two{grid-template-columns:1fr}.page-head h1{font-size:21px}.panel{padding:16px}.login-card{padding:24px}}
+</style>
+</head>
+<body>
+<section id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand-mark">A</div>
+    <h1>AVTECH SMS</h1>
+    <p class="muted">Administrator sign in to access the SMS management dashboard.</p>
+    <form id="loginForm">
+      <label for="adminPassword">Administrator password</label>
+      <input id="adminPassword" type="password" placeholder="Enter admin password" autocomplete="current-password" required>
+      <button class="primary full" type="submit">SIGN IN</button>
+      <div id="loginError" class="login-error" role="alert"></div>
+    </form>
+    <p class="muted">AVTECH SMS Management System</p>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">A</div><div><strong>AVTECH SMS</strong><small>SMS MANAGEMENT SYSTEM</small></div></div>
+    <div class="top-actions"><span class="admin-label">Administrator session</span><button class="logout" id="logoutBtn">Log out</button></div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="nav-btn active" data-page="dashboard"><span>▦</span>Dashboard</button>
+      <button class="nav-btn" data-page="compose"><span>✉</span>Compose SMS</button>
+      <button class="nav-btn" data-page="history"><span>◷</span>SMS History</button>
+      <button class="nav-btn" data-page="settings"><span>⚙</span>System Details</button>
+    </aside>
+
+    <main class="main">
+      <section id="dashboardPage" class="page">
+        <div class="page-head"><div><h1>Dashboard overview</h1><p>Monitor SMS requests and manage your communications.</p></div></div>
+        <div class="stats">
+          <div class="stat-card"><div class="stat-top">Accepted requests <span class="stat-icon">✓</span></div><strong id="sentCount">0</strong><div class="small">Requests accepted by your server</div></div>
+          <div class="stat-card"><div class="stat-top">Recipients <span class="stat-icon">♙</span></div><strong id="numberCount">0</strong><div class="small">Successful recipient requests</div></div>
+          <div class="stat-card"><div class="stat-top">History records <span class="stat-icon">◷</span></div><strong id="historyCount">0</strong><div class="small">Saved on this device</div></div>
+        </div>
+        <div class="panel"><h2>Welcome to AVTECH SMS</h2><p class="panel-sub">Your SMS control centre is ready.</p><button class="primary" data-goto="compose">Compose a message</button></div>
+        <div class="panel"><h2>Recent activity</h2><p class="panel-sub">Your latest SMS requests appear here.</p><div id="recentHistory"></div></div>
+      </section>
+
+      <section id="composePage" class="page hidden">
+        <div class="page-head"><div><h1>Compose SMS</h1><p>Send a message to one Kenyan number or a list of recipients.</p></div></div>
+        <div class="panel">
+          <h2>New message</h2><p class="panel-sub">Check the recipients and message before sending.</p>
+          <label for="mode">Sending mode</label>
+          <select id="mode"><option value="single">Single SMS</option><option value="bulk">Bulk SMS</option></select>
+          <div id="singleBox"><label for="phone">Recipient phone number</label><input id="phone" type="tel" placeholder="0712345678 or +254712345678"><p class="small">Safaricom ranges are recognized automatically. Use the full Kenyan number, e.g. 0712345678 or +254712345678. Delivery still depends on Africa’s Talking and Safaricom routing.</p></div>
+          <div id="bulkBox" class="hidden"><label for="phones">Multiple phone numbers</label><textarea id="phones" placeholder="0712345678&#10;0723456789&#10;+254712345678"></textarea><p class="small">One number per line, or separate numbers with commas.</p></div>
+          <label for="message">SMS message</label>
+          <textarea id="message" maxlength="1000" placeholder="Type your SMS message here..."></textarea>
+          <div class="small">Characters: <span id="charCount">0</span> / 1000</div>
+          <div class="actions"><button class="primary" id="sendBtn">SEND SMS</button><button class="secondary" id="clearFormBtn">Clear form</button></div>
+          <div id="status" class="status" role="status"></div>
+        </div>
+      </section>
+
+      <section id="historyPage" class="page hidden">
+        <div class="page-head"><div><h1>SMS History</h1><p>Review requests recorded by this browser.</p></div><button class="danger" id="clearHistoryBtn">Clear history</button></div>
+        <div class="panel"><div id="history"></div></div>
+      </section>
+
+      <section id="settingsPage" class="page hidden">
+        <div class="page-head"><div><h1>System details</h1><p>SMS connection information.</p></div></div>
+        <div class="panel">
+          <h2>Provider configuration</h2><p class="panel-sub">Your API credentials should remain on the server, never inside this HTML file.</p>
+          <div class="info-list"><b>SMS provider</b><span>Africa's Talking</span><b>API mode</b><span>Live (configured on backend)</span><b>Sender ID</b><span>Default account sender</span><b>API endpoint</b><span>/api/send-sms</span><b>Administrator</b><span>AVTECH SMS administrator</span></div>
+        </div>
+        <div class="panel"><h2>Important security note</h2><p class="small">This page's password gate is a basic front-end access screen. For real security, protect the SMS API endpoint with server-side authentication and authorization. Do not publish API keys or secret credentials in index.html.</p></div>
+      </section>
+    </main>
+  </div>
+  <footer>© 2026 AVTECH SMS MANAGEMENT SYSTEM</footer>
+</div>
+
+<script>
+"use strict";
+const ADMIN_PASSWORD = "001";
+const API_URL = "/api/send-sms";
+const STORAGE_KEY = "avtech_sms_history_v1";
+let historyData = [];
+let acceptedCount = 0;
+let recipientCount = 0;
+
+const $ = id => document.getElementById(id);
+
+function loadHistory(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    historyData = Array.isArray(saved) ? saved : [];
+  }catch(e){ historyData = []; }
+  acceptedCount = historyData.filter(x => x.status === "Accepted").length;
+  recipientCount = acceptedCount;
+}
+function saveHistory(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(historyData.slice(0,500))); }
+  catch(e){ console.warn("Could not save local SMS history.", e); }
+}
+function showPage(page){
+  document.querySelectorAll(".page").forEach(el => el.classList.add("hidden"));
+  $(page + "Page").classList.remove("hidden");
+  document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
+  if(page === "history") renderHistory("history");
+  if(page === "dashboard") renderHistory("recentHistory");
+}
+function login(){
+  $("loginScreen").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  sessionStorage.setItem("avtech_admin_logged_in","yes");
+  updateStats();
+  renderHistory("recentHistory");
+}
+function logout(){
+  sessionStorage.removeItem("avtech_admin_logged_in");
+  $("app").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+  $("adminPassword").value = "";
+  $("loginError").textContent = "";
+}
+$("loginForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if($("adminPassword").value === ADMIN_PASSWORD){ login(); }
+  else { $("loginError").textContent = "Incorrect password. Please try again."; $("adminPassword").select(); }
+});
+$("logoutBtn").addEventListener("click", logout);
+document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.page)));
+document.querySelectorAll("[data-goto]").forEach(btn => btn.addEventListener("click", () => showPage(btn.dataset.goto)));
+
+$("mode").addEventListener("change", () => {
+  const bulk = $("mode").value === "bulk";
+  $("singleBox").classList.toggle("hidden", bulk);
+  $("bulkBox").classList.toggle("hidden", !bulk);
+});
+$("message").addEventListener("input", () => $("charCount").textContent = $("message").value.length);
+$("clearFormBtn").addEventListener("click", () => {
+  $("phone").value = ""; $("phones").value = ""; $("message").value = "";
+  $("charCount").textContent = "0"; hideStatus();
+});
+function normalizePhone(number){
+  let p = String(number).trim().replace(/[\s()-]/g,"");
+  if(/^0[17]\d{8}$/.test(p)) p = "+254" + p.slice(1);
+  if(/^254[17]\d{8}$/.test(p)) p = "+" + p;
+  if(!/^\+254[17]\d{8}$/.test(p)) throw new Error("Invalid Kenyan mobile number: " + number);
+  return p;
+}
+// Prefix recognition is informational only. Mobile Number Portability means
+// the original prefix cannot guarantee the subscriber's current network.
+function isSafaricomPrefix(phone){
+  const local = "0" + phone.slice(4); // +2547... -> 07... or +2541... -> 01...
+  const prefix = local.slice(0,4);
+  const n = Number(prefix);
+  return (n >= 1100 && n <= 1119) ||
+         (n >= 1400 && n <= 1406) ||
+         (n >= 7000 && n <= 7029) ||
+         (n >= 7400 && n <= 7403) ||
+         (n >= 7405 && n <= 7406) || prefix === "0748" ||
+         (n >= 7570 && n <= 7579) ||
+         (n >= 7680 && n <= 7689) ||
+         (n >= 7900 && n <= 7999);
+}
+function getRecipients(){
+  const raw = $("mode").value === "single" ? [$("phone").value] : $("phones").value.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
+  if(!raw.length || !raw.some(x=>x.trim())) throw new Error("Enter at least one phone number.");
+  return [...new Set(raw.map(normalizePhone))];
+}
+function showStatus(message,type){
+  const box = $("status"); box.className = "status " + type; box.textContent = message;
+}
+function hideStatus(){ $("status").className = "status"; $("status").textContent = ""; }
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function addHistory(phone,message,status){
+  historyData.unshift({phone,message,status,date:new Date().toLocaleString()});
+  historyData = historyData.slice(0,500);
+  saveHistory(); updateStats(); renderHistory("recentHistory");
+}
+function updateStats(){
+  $("sentCount").textContent = acceptedCount;
+  $("numberCount").textContent = recipientCount;
+  $("historyCount").textContent = historyData.length;
+}
+function renderHistory(target){
+  const box = $(target);
+  const items = target === "recentHistory" ? historyData.slice(0,5) : historyData;
+  if(!items.length){ box.innerHTML = '<div class="empty">No SMS requests recorded yet.</div>'; return; }
+  box.innerHTML = items.map(item => `
+    <div class="history-row">
+      <div><strong>${escapeHTML(item.phone)}</strong><p>${escapeHTML(item.message)}</p><span class="small">${escapeHTML(item.date)} · ${escapeHTML(item.status)}</span></div>
+      <span class="pill ${item.status === "Accepted" ? "" : "failed"}">${item.status === "Accepted" ? "Accepted" : "Failed"}</span>
+    </div>`).join("");
+}
+$("sendBtn").addEventListener("click", sendSMS);
+async function sendSMS(){
+  const btn = $("sendBtn");
+  try{
+    const message = $("message").value.trim();
+    if(!message) throw new Error("Please enter your SMS message.");
+    if(message.length > 1000) throw new Error("Message is too long.");
+    const recipients = getRecipients();
+    if(recipients.length > 100) throw new Error("Maximum 100 recipients per request.");
+    const safCount = recipients.filter(isSafaricomPrefix).length;
+    const prompt = "Send this SMS to " + recipients.length + " recipient(s)?\n" +
+      "Safaricom-allocated prefixes detected: " + safCount + ".\n" +
+      "Africa's Talking will handle network routing. Continue?";
+    if(!confirm(prompt)) return;
+    btn.disabled = true; btn.textContent = "SENDING...";
+    let successful = 0, failed = 0;
+    for(const phone of recipients){
+      try{
+        const response = await fetch(API_URL,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({phone,message})
+        });
+        let result;
+        try{ result = await response.json(); }
+        catch(e){ throw new Error("Server returned an invalid response."); }
+        if(!response.ok || result.success !== true) throw new Error(result.error || "Sending request failed");
+        successful++; acceptedCount++; recipientCount++;
+        addHistory(phone,message,"Accepted");
+      }catch(error){
+        failed++; addHistory(phone,message,"Failed: " + error.message);
+      }
+    }
+    if(successful > 0){
+      showStatus("Requests accepted: " + successful + ". Failed: " + failed + ". Acceptance does not confirm delivery; check Africa's Talking delivery reports.","info");
+    }else{
+      showStatus("No SMS requests were accepted. Check that your /api/send-sms backend is running and configured.","error");
+    }
+  }catch(error){ showStatus(error.message,"error"); }
+  finally{ btn.disabled = false; btn.textContent = "SEND SMS"; }
+}
+$("clearHistoryBtn").addEventListener("click", () => {
+  if(!confirm("Permanently clear the SMS history saved in this browser?")) return;
+  historyData = []; acceptedCount = 0; recipientCount = 0;
+  saveHistory(); updateStats(); renderHistory("history"); renderHistory("recentHistory");
+});
+loadHistory();
+if(sessionStorage.getItem("avtech_admin_logged_in") === "yes") login();
+</script>
+</body>
+</html>
